@@ -1,0 +1,33 @@
+package br.com.caju.desafio.entities.models;
+
+import br.com.caju.desafio.entities.enums.MerchantCategory;
+import com.github.f4b6a3.uuid.UuidCreator;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "transactions")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+public class Transaction {
+    @Id
+    private UUID id = UuidCreator.getTimeOrderedEpoch();
+
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    private Account account;
+
+    @Column
+    private Long amount;
+
+    @Enumerated(EnumType.STRING)
+    private MerchantCategory mcc;
+
+    @Column
+    private String merchant;
+}
