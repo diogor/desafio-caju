@@ -1,0 +1,17 @@
+package br.com.caju.desafio.repositories;
+
+import br.com.caju.desafio.entities.enums.MerchantCategory;
+import br.com.caju.desafio.entities.models.Account;
+import br.com.caju.desafio.entities.models.Balance;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface BalanceRepository extends JpaRepository<Balance, Long> {
+    @Query("SELECT b FROM Balance b WHERE b.account = :account AND b.mcc = :mcc")
+    Optional<Balance> findByAccountAndMcc(@Param("account") Account account, @Param("mcc") MerchantCategory mcc);
+}

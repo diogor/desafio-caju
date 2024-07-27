@@ -4,8 +4,6 @@ import br.com.caju.desafio.entities.enums.MerchantCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
-
 @Entity
 @Table(name = "balance", uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "mcc"}))
 @Builder
