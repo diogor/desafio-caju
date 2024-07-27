@@ -1,6 +1,6 @@
-package br.com.caju.desafio.entities.models;
+package br.com.caju.desafio.core.entities.models;
 
-import br.com.caju.desafio.entities.enums.MerchantCategory;
+import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import jakarta.persistence.*;
 import lombok.*;
 

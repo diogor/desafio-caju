@@ -1,11 +1,10 @@
-package br.com.caju.desafio.entities.models;
+package br.com.caju.desafio.core.entities.models;
 
-import br.com.caju.desafio.entities.enums.MerchantCategory;
+import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "transactions")
@@ -16,6 +15,7 @@ import java.util.UUID;
 @Setter
 public class Transaction {
     @Id
+    @Builder.Default
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
     @ManyToOne

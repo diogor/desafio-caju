@@ -1,6 +1,6 @@
-package br.com.caju.desafio.repositories;
+package br.com.caju.desafio.core.repositories;
 
-import br.com.caju.desafio.entities.models.Account;
+import br.com.caju.desafio.core.entities.models.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

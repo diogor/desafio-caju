@@ -1,4 +1,4 @@
-package br.com.caju.desafio.entities.models;
+package br.com.caju.desafio.core.entities.models;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,4 +1,4 @@
-package br.com.caju.desafio.entities.enums;
+package br.com.caju.desafio.core.entities.enums;
 
 public enum MerchantCategory {
     FOOD,

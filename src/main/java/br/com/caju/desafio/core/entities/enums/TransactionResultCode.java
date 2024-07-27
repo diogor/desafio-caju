@@ -1,4 +1,4 @@
-package br.com.caju.desafio.entities.enums;
+package br.com.caju.desafio.core.entities.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
