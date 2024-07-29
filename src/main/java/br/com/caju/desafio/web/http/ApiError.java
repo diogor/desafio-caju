@@ -1,4 +1,4 @@
-package br.com.caju.desafio.web.http.exceptions;
+package br.com.caju.desafio.web.http;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,5 @@
 package br.com.caju.desafio.web.http;
 
-import br.com.caju.desafio.web.http.exceptions.ApiError;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
