@@ -14,10 +14,4 @@ public enum TransactionResultCode {
     ERROR("07");
 
     private final String code;
-
-    public static Optional<TransactionResultCode> get(String code) {
-        return Arrays.stream(TransactionResultCode.values())
-                .filter(res -> res.code.equals(code))
-                .findFirst();
-    }
 }
