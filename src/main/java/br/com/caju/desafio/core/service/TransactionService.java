@@ -5,10 +5,8 @@ import br.com.caju.desafio.core.entities.dtos.CreateTransactionDTO;
 import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import br.com.caju.desafio.core.entities.enums.TransactionResultCode;
 import br.com.caju.desafio.core.entities.models.Account;
-import br.com.caju.desafio.core.entities.models.Balance;
 import br.com.caju.desafio.core.entities.models.Transaction;
 import br.com.caju.desafio.core.repositories.AccountRepository;
-import br.com.caju.desafio.core.repositories.BalanceRepository;
 import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -19,13 +17,13 @@ import java.util.Optional;
 @Service
 public class TransactionService {
     private final AccountRepository accountRepository;
-    private final BalanceRepository balanceRepository;
     private final MerchantCategories merchantCategories;
+    private final AccountService accountService;
 
-    public TransactionService(AccountRepository accountRepository, BalanceRepository balanceRepository, MerchantCategories merchantCategories) {
+    public TransactionService(AccountRepository accountRepository, AccountService accountService, MerchantCategories merchantCategories) {
         this.accountRepository = accountRepository;
-        this.balanceRepository = balanceRepository;
         this.merchantCategories = merchantCategories;
+        this.accountService = accountService;
     }
 
     private MerchantCategory getMccByValue(int value) {
@@ -51,18 +49,16 @@ public class TransactionService {
         return transaction;
     }
 
+
     @Transactional
     public TransactionResultCode processTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
         Transaction transaction = convertToTransaction(createTransactionDTO);
-        Long balance = balanceRepository
-                .findByAccountAndMcc(transaction.getAccount(), transaction.getMcc())
-                .map(Balance::getAmount)
-                .orElse(0L);
-        if (balance < transaction.getAmount()) {
-            return TransactionResultCode.INSUFFICIENT_FUNDS;
+        Long balance = accountService.getAccountBalance(transaction.getAccount().getAccountId(), transaction.getMcc());
+
+        if (transaction.getMcc() != MerchantCategory.CASH) {
+            if (balance < transaction.getAmount()) return accountService.debitAccount(transaction, MerchantCategory.CASH);
         }
 
-        balanceRepository.debitAccount(transaction.getAccount(), transaction.getMcc(), transaction.getAmount());
-        return TransactionResultCode.APPROVED;
+        return accountService.debitAccount(transaction, transaction.getMcc());
     }
 }
