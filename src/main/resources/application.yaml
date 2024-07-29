@@ -1,0 +1,10 @@
+business:
+  mccs:
+    - value: 5411
+      category: FOOD
+    - value: 5412
+      category: FOOD
+    - value: 5811
+      category: MEAL
+    - value: 5812
+      category: MEAL

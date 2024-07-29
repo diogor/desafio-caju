@@ -1,5 +1,6 @@
 package br.com.caju.desafio.core.service;
 
+import br.com.caju.desafio.core.definitions.MerchantCategories;
 import br.com.caju.desafio.core.entities.dtos.CreateTransactionDTO;
 import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import br.com.caju.desafio.core.entities.enums.TransactionResultCode;
@@ -12,26 +13,27 @@ import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
 public class TransactionService {
     private final AccountRepository accountRepository;
     private final BalanceRepository balanceRepository;
-    private final HashMap<Integer, MerchantCategory> mccMap = new HashMap<>();
+    private final MerchantCategories merchantCategories;
 
-    public TransactionService(AccountRepository accountRepository, BalanceRepository balanceRepository) {
+    public TransactionService(AccountRepository accountRepository, BalanceRepository balanceRepository, MerchantCategories merchantCategories) {
         this.accountRepository = accountRepository;
         this.balanceRepository = balanceRepository;
-        mccMap.put(5411, MerchantCategory.FOOD);
-        mccMap.put(5412, MerchantCategory.FOOD);
-        mccMap.put(5811, MerchantCategory.MEAL);
-        mccMap.put(5812, MerchantCategory.MEAL);
+        this.merchantCategories = merchantCategories;
     }
 
     private MerchantCategory getMccByValue(int value) {
-        return this.mccMap.getOrDefault(value, MerchantCategory.CASH);
+        try {
+            return merchantCategories.mccs().stream().filter(mcc -> mcc.value() == value).findFirst().get().category();
+        } catch (NoSuchElementException _) {
+            return MerchantCategory.CASH;
+        }
     }
 
     private Transaction convertToTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
