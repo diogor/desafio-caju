@@ -13,6 +13,7 @@ import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,7 +64,7 @@ public class TransactionService {
 
         Transaction transaction = new Transaction();
         transaction.setAccount(account.get());
-        transaction.setAmount(createTransactionDTO.getTotalAmount().longValue());
+        transaction.setAmount(createTransactionDTO.getTotalAmount().multiply(new BigDecimal(100)).longValue());
         transaction.setMcc(this.getMcc(createTransactionDTO));
         transaction.setMerchant(createTransactionDTO.getMerchant());
         return transaction;
