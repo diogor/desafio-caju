@@ -23,17 +23,20 @@ public class TransactionService {
     private final MerchantCategories merchantCategories;
     private final AccountService accountService;
     private final MerchantRepository merchantRepository;
+    private final LockService lockService;
 
     public TransactionService(
             AccountRepository accountRepository,
             AccountService accountService,
             MerchantCategories merchantCategories,
-            MerchantRepository merchantRepository
+            MerchantRepository merchantRepository,
+            LockService lockService
     ) {
         this.accountRepository = accountRepository;
         this.merchantCategories = merchantCategories;
         this.accountService = accountService;
         this.merchantRepository = merchantRepository;
+        this.lockService = lockService;
     }
 
     private MerchantCategory getMcc(CreateTransactionDTO createTransactionDTO) {
@@ -70,13 +73,19 @@ public class TransactionService {
     @Transactional
     public TransactionResultCode processTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
         Transaction transaction = convertToTransaction(createTransactionDTO);
-        Long balance = accountService.getAccountBalance(transaction.getAccount().getAccountId(), transaction.getMcc());
+        String key = transaction.getAccount().getAccountId();
 
-        if (transaction.getMcc() != MerchantCategory.CASH) {
-            if (balance < transaction.getAmount())
-                return accountService.debitAccount(transaction, MerchantCategory.CASH);
+        try {
+            lockService.lock(key);
+            Long balance = accountService.getAccountBalance(transaction.getAccount().getAccountId(), transaction.getMcc());
+
+            if (transaction.getMcc() != MerchantCategory.CASH) {
+                if (balance < transaction.getAmount())
+                    return accountService.debitAccount(transaction, MerchantCategory.CASH);
+            }
+            return accountService.debitAccount(transaction, transaction.getMcc());
+        } finally {
+            lockService.unlock(key);
         }
-
-        return accountService.debitAccount(transaction, transaction.getMcc());
     }
 }
