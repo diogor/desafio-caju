@@ -5,13 +5,16 @@ import br.com.caju.desafio.core.entities.dtos.CreateTransactionDTO;
 import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import br.com.caju.desafio.core.entities.enums.TransactionResultCode;
 import br.com.caju.desafio.core.entities.models.Account;
+import br.com.caju.desafio.core.entities.models.Merchant;
 import br.com.caju.desafio.core.entities.models.Transaction;
 import br.com.caju.desafio.core.repositories.AccountRepository;
+import br.com.caju.desafio.core.repositories.MerchantRepository;
 import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -19,16 +22,30 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final MerchantCategories merchantCategories;
     private final AccountService accountService;
+    private final MerchantRepository merchantRepository;
 
-    public TransactionService(AccountRepository accountRepository, AccountService accountService, MerchantCategories merchantCategories) {
+    public TransactionService(
+            AccountRepository accountRepository,
+            AccountService accountService,
+            MerchantCategories merchantCategories,
+            MerchantRepository merchantRepository
+    ) {
         this.accountRepository = accountRepository;
         this.merchantCategories = merchantCategories;
         this.accountService = accountService;
+        this.merchantRepository = merchantRepository;
     }
 
-    private MerchantCategory getMccByValue(int value) {
+    private MerchantCategory getMcc(CreateTransactionDTO createTransactionDTO) {
+        Integer value = createTransactionDTO.getMcc();
+        Merchant merchant = merchantRepository.findByName(createTransactionDTO.getMerchant()).orElse(null);
+
+        if (merchant != null) {
+            return merchant.getMcc();
+        }
+
         try {
-            return merchantCategories.mccs().stream().filter(mcc -> mcc.value() == value).findFirst().get().category();
+            return merchantCategories.mccs().stream().filter(mcc -> Objects.equals(mcc.value(), value)).findFirst().get().category();
         } catch (NoSuchElementException _) {
             return MerchantCategory.CASH;
         }
@@ -44,7 +61,7 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setAccount(account.get());
         transaction.setAmount(createTransactionDTO.getTotalAmount().longValue());
-        transaction.setMcc(this.getMccByValue(createTransactionDTO.getMcc()));
+        transaction.setMcc(this.getMcc(createTransactionDTO));
         transaction.setMerchant(createTransactionDTO.getMerchant());
         return transaction;
     }
@@ -56,7 +73,8 @@ public class TransactionService {
         Long balance = accountService.getAccountBalance(transaction.getAccount().getAccountId(), transaction.getMcc());
 
         if (transaction.getMcc() != MerchantCategory.CASH) {
-            if (balance < transaction.getAmount()) return accountService.debitAccount(transaction, MerchantCategory.CASH);
+            if (balance < transaction.getAmount())
+                return accountService.debitAccount(transaction, MerchantCategory.CASH);
         }
 
         return accountService.debitAccount(transaction, transaction.getMcc());

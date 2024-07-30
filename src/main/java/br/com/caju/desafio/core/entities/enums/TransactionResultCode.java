@@ -3,9 +3,6 @@ package br.com.caju.desafio.core.entities.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.Optional;
-
 @Getter
 @AllArgsConstructor
 public enum TransactionResultCode {

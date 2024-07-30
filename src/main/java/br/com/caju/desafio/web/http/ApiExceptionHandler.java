@@ -29,11 +29,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             errors.add(error.getObjectName() + ": " + error.getDefaultMessage());
         }
         return handleExceptionInternal(
-            ex,
-            new ApiError("Validation error", errors, fieldErrors),
-            headers,
-            status,
-            request
+                ex,
+                new ApiError("Validation error", errors, fieldErrors),
+                headers,
+                status,
+                request
         );
     }
 }

@@ -9,8 +9,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @SpringBootApplication
 public class DesafioApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DesafioApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DesafioApplication.class, args);
+    }
 
 }

@@ -3,8 +3,9 @@ package br.com.caju.desafio.core.entities.models;
 import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
-import java.util.UUID;
 import lombok.*;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "transactions")
