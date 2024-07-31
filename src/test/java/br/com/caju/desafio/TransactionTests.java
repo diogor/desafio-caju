@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.math.BigDecimal;
 
@@ -42,10 +41,6 @@ class TransactionTests {
 
     @Autowired
     private MerchantRepository merchantRepository;
-
-    private AccountService accountService;
-
-    private LockService lockService;
 
     private TransactionService transactionService;
 
@@ -91,13 +86,13 @@ class TransactionTests {
         entityManager.persist(merchantCash);
         entityManager.persist(merchantMeal);
 
-        lockService = new LockService();
-        accountService = new AccountService(accountRepository, balanceRepository);
+        LockService lockService = new LockService();
+        AccountService accountService = new AccountService(accountRepository, balanceRepository);
         transactionService = new TransactionService(accountRepository, lockService, accountService, merchantCategories, merchantRepository);
     }
 
     @Test
-    void authorizerInsufficientFunds() throws NotFoundException {
+    void insufficientFunds() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
         transactionDTO.setMcc(1);
         transactionDTO.setAccount("1");
@@ -110,10 +105,114 @@ class TransactionTests {
     }
 
     @Test
-    void authorizerFallbackToCash() {
+    void fallbackToCash() throws NotFoundException {
+        CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
+        transactionDTO.setMcc(5812); // MEAL mcc
+        transactionDTO.setAccount("1");
+        transactionDTO.setMerchant("test");
+        transactionDTO.setTotalAmount(new BigDecimal("100.01"));
+
+        TransactionResultCode result = transactionService.processTransaction(transactionDTO);
+
+        assertEquals(TransactionResultCode.APPROVED, result);
+
+        entityManager.clear();
+
+        Balance updatedCashBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.CASH).get();
+        Balance updatedMealBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.MEAL).get();
+
+        assertEquals(9999L, updatedCashBalance.getAmount().longValue());
+        assertEquals(10000L, updatedMealBalance.getAmount().longValue());
     }
 
     @Test
-    void authorizerUsingMerchant() {
+    void fallBackToCashAndInsufficientFunds() throws NotFoundException {
+        CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
+        transactionDTO.setMcc(5812); // MEAL mcc
+        transactionDTO.setAccount("1");
+        transactionDTO.setMerchant("test");
+        transactionDTO.setTotalAmount(new BigDecimal("200.01"));
+
+        TransactionResultCode result = transactionService.processTransaction(transactionDTO);
+
+        assertEquals(TransactionResultCode.INSUFFICIENT_FUNDS, result);
+    }
+
+    @Test
+    void usingMerchant() throws NotFoundException {
+        CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
+        transactionDTO.setMcc(5812); // MEAL mcc
+        transactionDTO.setAccount("1");
+        transactionDTO.setMerchant("SUPER MARKET"); // FOOD Merchant
+        transactionDTO.setTotalAmount(new BigDecimal("250.50"));
+
+        TransactionResultCode resultCode = transactionService.processTransaction(transactionDTO);
+
+        assertEquals(TransactionResultCode.APPROVED, resultCode);
+
+        entityManager.clear();
+
+        Balance updatedMealBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.MEAL).get();
+        Balance updatedFoodBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.FOOD).get();
+
+        assertEquals(10000L, updatedMealBalance.getAmount().longValue());
+        assertEquals(4950L, updatedFoodBalance.getAmount().longValue());
+    }
+
+    @Test
+    void approveFood() throws NotFoundException {
+        CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
+        transactionDTO.setMcc(5411); // FOOD mcc
+        transactionDTO.setAccount("1");
+        transactionDTO.setMerchant("test");
+        transactionDTO.setTotalAmount(new BigDecimal("250.50"));
+
+        TransactionResultCode resultCode = transactionService.processTransaction(transactionDTO);
+
+        assertEquals(TransactionResultCode.APPROVED, resultCode);
+
+        entityManager.clear();
+
+        Balance updatedFoodBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.FOOD).get();
+
+        assertEquals(4950L, updatedFoodBalance.getAmount().longValue());
+    }
+
+    @Test
+    void approveMeal() throws NotFoundException {
+        CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
+        transactionDTO.setMcc(5811); // MEAL mcc
+        transactionDTO.setAccount("1");
+        transactionDTO.setMerchant("test");
+        transactionDTO.setTotalAmount(new BigDecimal("50.01"));
+
+        TransactionResultCode resultCode = transactionService.processTransaction(transactionDTO);
+
+        assertEquals(TransactionResultCode.APPROVED, resultCode);
+
+        entityManager.clear();
+
+        Balance updatedBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.MEAL).get();
+
+        assertEquals(4999L, updatedBalance.getAmount().longValue());
+    }
+
+    @Test
+    void approveCash() throws NotFoundException {
+        CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
+        transactionDTO.setMcc(1); // CASH
+        transactionDTO.setAccount("1");
+        transactionDTO.setMerchant("test");
+        transactionDTO.setTotalAmount(new BigDecimal("33.01"));
+
+        TransactionResultCode resultCode = transactionService.processTransaction(transactionDTO);
+
+        assertEquals(TransactionResultCode.APPROVED, resultCode);
+
+        entityManager.clear();
+
+        Balance updatedBalance = balanceRepository.findByAccountAndMcc(account, MerchantCategory.CASH).get();
+
+        assertEquals(16699L, updatedBalance.getAmount().longValue());
     }
 }
