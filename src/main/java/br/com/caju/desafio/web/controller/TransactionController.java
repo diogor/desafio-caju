@@ -26,7 +26,11 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> processTransaction(@Valid @RequestBody CreateTransactionDTO createTransactionDTO) throws NotFoundException {
-        return transactionResponse(transactionService.processTransaction(createTransactionDTO));
+    public ResponseEntity<Map<String, String>> processTransaction(@Valid @RequestBody CreateTransactionDTO createTransactionDTO) {
+        try {
+            return transactionResponse(transactionService.processTransaction(createTransactionDTO));
+        } catch (Exception _) {
+            return transactionResponse(TransactionResultCode.ERROR);
+        }
     }
 }
