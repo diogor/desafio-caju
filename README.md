@@ -3,7 +3,7 @@
 ## Rodando o projeto (Docker)
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 - Acesse em: http://localhost:8080
