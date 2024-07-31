@@ -6,6 +6,7 @@ import br.com.caju.desafio.core.entities.models.Balance;
 import br.com.caju.desafio.core.entities.models.Transaction;
 import br.com.caju.desafio.core.repositories.AccountRepository;
 import br.com.caju.desafio.core.repositories.BalanceRepository;
+import br.com.caju.desafio.core.repositories.TransactionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final BalanceRepository balanceRepository;
+    private final TransactionRepository transactionRepository;
 
     @Transactional
     public Long getAccountBalance(String account, MerchantCategory mcc) {
@@ -27,9 +29,11 @@ public class AccountService {
 
     @Transactional
     public TransactionResultCode debitAccount(Transaction transaction, MerchantCategory mcc) {
+        transaction.setMcc(mcc);
         Long balance = getAccountBalance(transaction.getAccount().getAccountId(), mcc);
         if (balance < transaction.getAmount()) return TransactionResultCode.INSUFFICIENT_FUNDS;
         balanceRepository.debitAccount(transaction.getAccount(), mcc, transaction.getAmount());
+        transactionRepository.save(transaction);
         return TransactionResultCode.APPROVED;
     }
 }
