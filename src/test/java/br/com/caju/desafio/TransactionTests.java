@@ -1,16 +1,17 @@
 package br.com.caju.desafio;
 
+import br.com.caju.desafio.core.definitions.MerchantCategories;
 import br.com.caju.desafio.core.entities.dtos.CreateTransactionDTO;
 import br.com.caju.desafio.core.entities.enums.MerchantCategory;
 import br.com.caju.desafio.core.entities.enums.TransactionResultCode;
 import br.com.caju.desafio.core.entities.models.Account;
 import br.com.caju.desafio.core.entities.models.Balance;
 import br.com.caju.desafio.core.entities.models.Merchant;
-import br.com.caju.desafio.core.entities.models.Transaction;
 import br.com.caju.desafio.core.repositories.AccountRepository;
 import br.com.caju.desafio.core.repositories.BalanceRepository;
 import br.com.caju.desafio.core.repositories.MerchantRepository;
 import br.com.caju.desafio.core.service.AccountService;
+import br.com.caju.desafio.core.service.LockService;
 import br.com.caju.desafio.core.service.TransactionService;
 import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+
 @DataJpaTest
 class TransactionTests {
     @Autowired
@@ -36,9 +38,15 @@ class TransactionTests {
     private BalanceRepository balanceRepository;
 
     @Autowired
+    private MerchantCategories merchantCategories;
+
+    @Autowired
     private MerchantRepository merchantRepository;
 
-    @MockBean
+    private AccountService accountService;
+
+    private LockService lockService;
+
     private TransactionService transactionService;
 
     private Account account;
@@ -82,6 +90,10 @@ class TransactionTests {
         entityManager.persist(merchantFood);
         entityManager.persist(merchantCash);
         entityManager.persist(merchantMeal);
+
+        lockService = new LockService();
+        accountService = new AccountService(accountRepository, balanceRepository);
+        transactionService = new TransactionService(accountRepository, lockService, accountService, merchantCategories, merchantRepository);
     }
 
     @Test
@@ -94,7 +106,7 @@ class TransactionTests {
 
         TransactionResultCode result = transactionService.processTransaction(transactionDTO);
 
-        assertEquals(TransactionResultCode.INSUFFICIENT_FUNDS.getCode(), result);
+        assertEquals(TransactionResultCode.INSUFFICIENT_FUNDS, result);
     }
 
     @Test
