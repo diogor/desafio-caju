@@ -3,7 +3,6 @@ package br.com.caju.desafio.web.controller;
 import br.com.caju.desafio.core.entities.dtos.CreateTransactionDTO;
 import br.com.caju.desafio.core.entities.enums.TransactionResultCode;
 import br.com.caju.desafio.core.service.TransactionService;
-import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

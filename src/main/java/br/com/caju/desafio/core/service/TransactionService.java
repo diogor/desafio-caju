@@ -57,7 +57,7 @@ public class TransactionService {
     }
 
     private MerchantCategory getMcc(CreateTransactionDTO createTransactionDTO) {
-        Integer value = createTransactionDTO.getMcc();
+        Integer value = Integer.valueOf(createTransactionDTO.getMcc());
         Merchant merchant = merchantRepository.findByName(createTransactionDTO.getMerchant()).orElse(null);
 
         if (merchant != null) {
