@@ -11,6 +11,7 @@ import br.com.caju.desafio.core.repositories.AccountRepository;
 import br.com.caju.desafio.core.repositories.MerchantRepository;
 import br.com.caju.desafio.web.http.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,25 +20,40 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
     private final AccountRepository accountRepository;
-    private final MerchantCategories merchantCategories;
-    private final AccountService accountService;
-    private final MerchantRepository merchantRepository;
     private final LockService lockService;
+    private final AccountService accountService;
+    private final MerchantCategories merchantCategories;
+    private final MerchantRepository merchantRepository;
 
-    public TransactionService(
-            AccountRepository accountRepository,
-            AccountService accountService,
-            MerchantCategories merchantCategories,
-            MerchantRepository merchantRepository,
-            LockService lockService
-    ) {
-        this.accountRepository = accountRepository;
-        this.merchantCategories = merchantCategories;
-        this.accountService = accountService;
-        this.merchantRepository = merchantRepository;
-        this.lockService = lockService;
+    private Transaction convertToTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
+        Optional<Account> account = accountRepository.findByAccountId(createTransactionDTO.getAccount());
+
+        if (account.isEmpty()) {
+            throw new NotFoundException("Account not found");
+        }
+
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account.get());
+        transaction.setMcc(getMcc(createTransactionDTO));
+        transaction.setAmount(createTransactionDTO.getTotalAmount().multiply(new BigDecimal(100)).longValue());
+        transaction.setMerchant(createTransactionDTO.getMerchant());
+        return transaction;
+    }
+
+    @Transactional
+    public TransactionResultCode processTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
+        Transaction transaction = convertToTransaction(createTransactionDTO);
+        String key = transaction.getAccount().getAccountId();
+
+        try {
+            lockService.lock(key);
+            return this.authorize(transaction);
+        } finally {
+            lockService.unlock(key);
+        }
     }
 
     private MerchantCategory getMcc(CreateTransactionDTO createTransactionDTO) {
@@ -55,38 +71,13 @@ public class TransactionService {
         }
     }
 
-    private Transaction convertToTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
-        Optional<Account> account = accountRepository.findByAccountId(createTransactionDTO.getAccount());
+    private TransactionResultCode authorize(Transaction transaction) {
+        Long balance = accountService.getAccountBalance(transaction.getAccount().getAccountId(), transaction.getMcc());
 
-        if (account.isEmpty()) {
-            throw new NotFoundException("Account not found");
+        if (transaction.getMcc() != MerchantCategory.CASH) {
+            if (balance < transaction.getAmount())
+                return accountService.debitAccount(transaction, MerchantCategory.CASH);
         }
-
-        Transaction transaction = new Transaction();
-        transaction.setAccount(account.get());
-        transaction.setAmount(createTransactionDTO.getTotalAmount().multiply(new BigDecimal(100)).longValue());
-        transaction.setMcc(this.getMcc(createTransactionDTO));
-        transaction.setMerchant(createTransactionDTO.getMerchant());
-        return transaction;
-    }
-
-
-    @Transactional
-    public TransactionResultCode processTransaction(CreateTransactionDTO createTransactionDTO) throws NotFoundException {
-        Transaction transaction = convertToTransaction(createTransactionDTO);
-        String key = transaction.getAccount().getAccountId();
-
-        try {
-            lockService.lock(key);
-            Long balance = accountService.getAccountBalance(transaction.getAccount().getAccountId(), transaction.getMcc());
-
-            if (transaction.getMcc() != MerchantCategory.CASH) {
-                if (balance < transaction.getAmount())
-                    return accountService.debitAccount(transaction, MerchantCategory.CASH);
-            }
-            return accountService.debitAccount(transaction, transaction.getMcc());
-        } finally {
-            lockService.unlock(key);
-        }
+        return accountService.debitAccount(transaction, transaction.getMcc());
     }
 }

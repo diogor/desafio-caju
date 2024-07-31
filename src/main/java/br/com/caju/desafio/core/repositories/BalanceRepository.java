@@ -16,7 +16,7 @@ public interface BalanceRepository extends JpaRepository<Balance, Long> {
     @Query("SELECT b FROM Balance b WHERE b.account = :account AND b.mcc = :mcc")
     Optional<Balance> findByAccountAndMcc(@Param("account") Account account, @Param("mcc") MerchantCategory mcc);
 
-    @Modifying
+    @Modifying()
     @Query("UPDATE Balance b SET b.amount = b.amount - :amount WHERE b.account = :account AND b.mcc = :mcc")
     void debitAccount(@Param("account") Account account, @Param("mcc") MerchantCategory mcc, @Param("amount") Long amount);
 }
