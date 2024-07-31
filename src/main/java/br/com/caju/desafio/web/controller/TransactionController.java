@@ -27,6 +27,6 @@ public class TransactionController {
 
     @PostMapping
     public ResponseEntity<Map<String, String>> processTransaction(@Valid @RequestBody CreateTransactionDTO createTransactionDTO) throws NotFoundException {
-            return transactionResponse(transactionService.processTransaction(createTransactionDTO));
-        }
+        return transactionResponse(transactionService.processTransaction(createTransactionDTO));
+    }
 }
