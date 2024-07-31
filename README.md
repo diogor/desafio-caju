@@ -6,11 +6,12 @@
 docker-compose up -d
 ```
 
-- Acesse em: http://localhost:8080/transactions
+- Acesse em: http://localhost:8080
 
 ## Rodando o projeto (Local)
 
 - Copie o arquivo `.env.example` para `.env` e altere as configurações de acordo.
+  - **O projeto utiliza `PostgreSQL` como banco de dados**
 
 ```bash
 ./gradlew bootRun
@@ -20,7 +21,7 @@ docker-compose up -d
 
 O banco inclui alguns dados de demonstração:
 
-- Uma conta com o id `accountId` = "1"
+- Uma conta com o `accountId` = `"1"`
 - Saldos: `CASH`: `300`, `FOOD`: `200`, `MEAL`: `100`
 - Estabelecimentos:
     - `"SUPER MARKET"`, categoria: `FOOD`
