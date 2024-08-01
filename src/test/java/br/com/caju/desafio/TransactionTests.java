@@ -10,6 +10,7 @@ import br.com.caju.desafio.core.entities.models.Merchant;
 import br.com.caju.desafio.core.repositories.AccountRepository;
 import br.com.caju.desafio.core.repositories.BalanceRepository;
 import br.com.caju.desafio.core.repositories.MerchantRepository;
+import br.com.caju.desafio.core.repositories.TransactionRepository;
 import br.com.caju.desafio.core.service.AccountService;
 import br.com.caju.desafio.core.service.LockService;
 import br.com.caju.desafio.core.service.TransactionService;
@@ -35,6 +36,9 @@ class TransactionTests {
 
     @Autowired
     private BalanceRepository balanceRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Autowired
     private MerchantCategories merchantCategories;
@@ -87,14 +91,14 @@ class TransactionTests {
         entityManager.persist(merchantMeal);
 
         LockService lockService = new LockService();
-        AccountService accountService = new AccountService(accountRepository, balanceRepository);
+        AccountService accountService = new AccountService(accountRepository, balanceRepository, transactionRepository);
         transactionService = new TransactionService(accountRepository, lockService, accountService, merchantCategories, merchantRepository);
     }
 
     @Test
     void insufficientFunds() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(1);
+        transactionDTO.setMcc("1");
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("test");
         transactionDTO.setTotalAmount(new BigDecimal("201.01"));
@@ -107,7 +111,7 @@ class TransactionTests {
     @Test
     void fallbackToCash() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(5812); // MEAL mcc
+        transactionDTO.setMcc("5812"); // MEAL mcc
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("test");
         transactionDTO.setTotalAmount(new BigDecimal("100.01"));
@@ -128,7 +132,7 @@ class TransactionTests {
     @Test
     void fallBackToCashAndInsufficientFunds() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(5812); // MEAL mcc
+        transactionDTO.setMcc("5812"); // MEAL mcc
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("test");
         transactionDTO.setTotalAmount(new BigDecimal("200.01"));
@@ -141,7 +145,7 @@ class TransactionTests {
     @Test
     void usingMerchant() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(5812); // MEAL mcc
+        transactionDTO.setMcc("5812"); // MEAL mcc
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("SUPER MARKET"); // FOOD Merchant
         transactionDTO.setTotalAmount(new BigDecimal("250.50"));
@@ -162,7 +166,7 @@ class TransactionTests {
     @Test
     void approveFood() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(5411); // FOOD mcc
+        transactionDTO.setMcc("5411"); // FOOD mcc
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("test");
         transactionDTO.setTotalAmount(new BigDecimal("250.50"));
@@ -181,7 +185,7 @@ class TransactionTests {
     @Test
     void approveMeal() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(5811); // MEAL mcc
+        transactionDTO.setMcc("5811"); // MEAL mcc
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("test");
         transactionDTO.setTotalAmount(new BigDecimal("50.01"));
@@ -200,7 +204,7 @@ class TransactionTests {
     @Test
     void approveCash() throws NotFoundException {
         CreateTransactionDTO transactionDTO = new CreateTransactionDTO();
-        transactionDTO.setMcc(1); // CASH
+        transactionDTO.setMcc("1"); // CASH
         transactionDTO.setAccount("1");
         transactionDTO.setMerchant("test");
         transactionDTO.setTotalAmount(new BigDecimal("33.01"));
