@@ -10,6 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
-    @Query("SELECT m FROM Merchant m WHERE m.name ilike :name")
+    @Query("SELECT m FROM Merchant m WHERE :name ilike '%' || m.name || '%'" )
     Optional<Merchant> findByName(@Param("name") String name);
 }
